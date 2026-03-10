@@ -25,6 +25,7 @@ impl Pallet {
 mod tests {
 	#[test]
 	fn init_balances() {
+		// We use mute because we will be modifying the balances in the test, and we need to be able to call set_balance.
 		let mut balances = super::Pallet::new();
 		
     	assert_eq!(balances.balance(&"alice".to_string()), 0);
