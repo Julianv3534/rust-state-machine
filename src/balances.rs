@@ -19,6 +19,30 @@ impl Pallet {
 	pub fn balance(&self, who: &String) -> u128 {
 		*self.balances.get(who).unwrap_or(&0)
 	}
+
+	pub fn transfer(
+		&mut self,
+		caller: String,
+		to: String,
+		amount: u128,
+	) -> Result<(), &'static str> {
+		let from_balance = self.balance(&caller);
+		let new_from_balance = from_balance
+    	.checked_sub(amount)
+    	.ok_or("Not enough funds.")?;
+
+		// Update the balance of the caller
+		self.set_balance(&caller, new_from_balance);
+
+		// Update the balance of the recipient
+		let to_balance = self.balance(&to);
+		let new_to_balance = to_balance
+		.checked_add(amount)
+		.ok_or("Balance overflow.")?;
+		self.set_balance(&to, new_to_balance);
+
+		Ok(())
+	}
 }
 
 #[cfg(test)]
