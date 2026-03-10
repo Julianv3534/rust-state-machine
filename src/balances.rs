@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+#[derive(Debug)]
 pub struct Pallet {
 	//Why BTreeMap and not HashMap?
 	balances: BTreeMap<String, u128>,

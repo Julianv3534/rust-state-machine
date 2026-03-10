@@ -1,6 +1,7 @@
 mod balances;
 mod system;
 
+#[derive(Debug)]
 pub struct Runtime {
 	system: system::Pallet,
 	balances: balances::Pallet,
@@ -29,5 +30,7 @@ fn main() {
 	// second transaction
 	runtime.system.inc_account_nonce("alice");
 	let _res = runtime.balances.transfer("alice".to_string(), "charlie".to_string(), 20).map_err(|e| eprintln!("{e}"));
+	
+	println!("{:#?}", runtime);
 }
 
