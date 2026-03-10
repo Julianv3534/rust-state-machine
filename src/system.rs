@@ -33,3 +33,17 @@ impl Pallet {
         *nonce += 1;
     }
 }
+
+#[cfg(test)]
+mod test {
+	#[test]
+	fn init_system() {
+		let mut system = super::Pallet::new();
+		system.inc_block_number();
+		system.inc_account_nonce("alice");
+
+		assert_eq!(system.block_number(), 1);
+		assert_eq!(system.account_nonce("alice"), 1);
+		assert_eq!(system.account_nonce("bob"), 0);
+	}
+}
