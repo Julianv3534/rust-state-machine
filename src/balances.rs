@@ -1,5 +1,8 @@
 use std::collections::BTreeMap;
 
+type Balance = u128;
+type AccountId = String;
+
 #[derive(Debug)]
 pub struct Pallet {
 	//Why BTreeMap and not HashMap?
