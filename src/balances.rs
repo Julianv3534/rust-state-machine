@@ -1,15 +1,17 @@
 use std::collections::BTreeMap;
-
-type Balance = u128;
-type AccountId = String;
+use num::traits::{CheckedAdd, CheckedSub, Zero};
 
 #[derive(Debug)]
-pub struct Pallet {
+pub struct Pallet<AccountId, Balance> {
 	//Why BTreeMap and not HashMap?
-	balances: BTreeMap<String, u128>,
+	balances: BTreeMap<AccountId, Balance>,
 }
 
-impl Pallet {
+impl<AccountId, Balance> Pallet<AccountId, Balance> 
+	where
+		AccountId: Ord + Clone,
+		Balance: Zero + CheckedSub + CheckedAdd + Copy,
+	{
 	pub fn new() -> Self {
 		Self { balances: BTreeMap::new() }
 	}
@@ -53,12 +55,31 @@ impl Pallet {
 mod tests {
 	#[test]
 	fn init_balances() {
-		// We use mute because we will be modifying the balances in the test, and we need to be able to call set_balance.
-		let mut balances = super::Pallet::new();
-		
-    	assert_eq!(balances.balance(&"alice".to_string()), 0);
-    	balances.set_balance(&"alice".to_string(), 100);
-    	assert_eq!(balances.balance(&"alice".to_string()), 100);
-    	assert_eq!(balances.balance(&"bob".to_string()), 0);
+		let mut balances = super::Pallet::<String, u128>::new();
+
+		assert_eq!(balances.balance(&"alice".to_string()), 0);
+		balances.set_balance(&"alice".to_string(), 100);
+		assert_eq!(balances.balance(&"alice".to_string()), 100);
+		assert_eq!(balances.balance(&"bob".to_string()), 0);
+	}
+
+	#[test]
+	fn transfer_balance() {
+		let mut balances = super::Pallet::<String, u128>::new();
+
+		assert_eq!(
+			balances.transfer("alice".to_string(), "bob".to_string(), 51),
+			Err("Not enough funds.")
+		);
+
+		balances.set_balance(&"alice".to_string(), 100);
+		assert_eq!(balances.transfer("alice".to_string(), "bob".to_string(), 51), Ok(()));
+		assert_eq!(balances.balance(&"alice".to_string()), 49);
+		assert_eq!(balances.balance(&"bob".to_string()), 51);
+
+		assert_eq!(
+			balances.transfer("alice".to_string(), "bob".to_string(), 51),
+			Err("Not enough funds.")
+		);
 	}
 }
