@@ -1,36 +1,42 @@
 use std::collections::BTreeMap;
 use num::traits::{CheckedAdd, CheckedSub, Zero};
 
-#[derive(Debug)]
-pub struct Pallet<AccountId, Balance> {
-	//Why BTreeMap and not HashMap?
-	balances: BTreeMap<AccountId, Balance>,
+type AccountId = String;
+type Balance = u128;
+
+pub trait Config {
+	type AccountId: Ord + Clone;
+	type Balance: Zero + CheckedAdd + CheckedSub + Copy;
 }
 
-impl<AccountId, Balance> Pallet<AccountId, Balance> 
+#[derive(Debug)]
+pub struct Pallet<T: Config> {
+	//Why BTreeMap and not HashMap?
+	balances: BTreeMap<T::AccountId, T::Balance>,
+}
+
+impl<T: Config> Pallet<T> 
 	where
-		AccountId: Ord,
-		Balance: Zero + CheckedSub + CheckedAdd + Copy,
+		T::AccountId: Ord,
+		T::Balance: Zero + CheckedSub + CheckedAdd + Copy,
 	{
 	pub fn new() -> Self {
 		Self { balances: BTreeMap::new() }
 	}
 
-	// can be done with &str and who.to_string() instead of String and clone, but for simplicity we
-	// will use String.
-	pub fn set_balance(&mut self, who: AccountId, amount: Balance) {
+	pub fn set_balance(&mut self, who: T::AccountId, amount: T::Balance) {
 		self.balances.insert(who, amount);
 	}
 
-	pub fn balance(&self, who: &AccountId) -> Balance {
-		*self.balances.get(who).unwrap_or(&Balance::zero())
+	pub fn balance(&self, who: &T::AccountId) -> T::Balance {
+		*self.balances.get(who).unwrap_or(&T::Balance::zero())
 	}
 
 	pub fn transfer(
 		&mut self,
-		caller: AccountId,
-		to: AccountId,
-		amount: Balance,
+		caller: T::AccountId,
+		to: T::AccountId,
+		amount: T::Balance,
 	) -> Result<(), &'static str> {
 		let from_balance = self.balance(&caller);
 		let new_from_balance = from_balance
@@ -53,9 +59,18 @@ impl<AccountId, Balance> Pallet<AccountId, Balance>
 
 #[cfg(test)]
 mod tests {
+	use super::{Config, Pallet};
+
+	struct TestConfig;
+
+	impl Config for TestConfig {
+		type AccountId = String;
+		type Balance = u128;
+	}
+
 	#[test]
 	fn init_balances() {
-		let mut balances = super::Pallet::<String, u128>::new();
+		let mut balances = Pallet::<TestConfig>::new();
 
 		assert_eq!(balances.balance(&"alice".to_string()), 0);
 		balances.set_balance("alice".to_string(), 100);
@@ -65,7 +80,7 @@ mod tests {
 
 	#[test]
 	fn transfer_balance() {
-		let mut balances = super::Pallet::<String, u128>::new();
+		let mut balances = Pallet::<TestConfig>::new();
 
 		assert_eq!(
 			balances.transfer("alice".to_string(), "bob".to_string(), 51),

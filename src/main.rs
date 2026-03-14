@@ -19,10 +19,15 @@ impl system::Config for RuntimeConfig {
 	type Nonce = Nonce;
 }
 
+impl balances::Config for RuntimeConfig {
+	type AccountId = AccountId;
+	type Balance = Balance;
+}
+
 #[derive(Debug)]
 pub struct Runtime {
 	system: system::Pallet<RuntimeConfig>,
-	balances: balances::Pallet<AccountId, Balance>,	
+	balances: balances::Pallet<RuntimeConfig>,	
 }
 
 impl Runtime {
