@@ -11,8 +11,17 @@ mod types {
 use types::{AccountId, Balance, BlockNumber, Nonce};
 
 #[derive(Debug)]
+struct RuntimeConfig;
+
+impl system::Config for RuntimeConfig {
+	type AccountId = AccountId;
+	type BlockNumber = BlockNumber;
+	type Nonce = Nonce;
+}
+
+#[derive(Debug)]
 pub struct Runtime {
-	system: system::Pallet<AccountId, BlockNumber, Nonce>,
+	system: system::Pallet<RuntimeConfig>,
 	balances: balances::Pallet<AccountId, Balance>,	
 }
 
