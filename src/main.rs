@@ -20,7 +20,6 @@ impl system::Config for RuntimeConfig {
 }
 
 impl balances::Config for RuntimeConfig {
-	type AccountId = AccountId;
 	type Balance = Balance;
 }
 
