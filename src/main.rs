@@ -15,7 +15,7 @@ mod types {
 }
 
 pub enum RuntimeCall {
-	Transfer { to: types::AccountId, amount: types::Balance },
+	BalancesTransfer { to: types::AccountId, amount: types::Balance },
 }
 
 #[derive(Debug)]
@@ -75,7 +75,12 @@ impl crate::support::Dispatch for Runtime {
 		caller: Self::Caller,
 		runtime_call: Self::Call,
 	) -> support::DispatchResult {
-		unimplemented!();
+		
+		match runtime_call {
+    	RuntimeCall::BalancesTransfer { to, amount } => {
+        self.balances.transfer(caller, to, amount).map_err(|e| { eprintln!("{e}");e })
+    		}
+		}
 	}
 }
 
