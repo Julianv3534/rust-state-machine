@@ -20,8 +20,8 @@ pub enum RuntimeCall {
 
 #[derive(Debug)]
 pub struct Runtime {
-	system: system::Pallet<RuntimeConfig>,
-	balances: balances::Pallet<RuntimeConfig>,
+	system: system::Pallet<Self>,
+	balances: balances::Pallet<Self>,
 }
 
 impl system::Config for Runtime {
@@ -75,7 +75,7 @@ impl crate::support::Dispatch for Runtime {
 		caller: Self::Caller,
 		runtime_call: Self::Call,
 	) -> support::DispatchResult {
-		
+
 		match runtime_call {
     	RuntimeCall::BalancesTransfer { to, amount } => {
         self.balances.transfer(caller, to, amount).map_err(|e| { eprintln!("{e}");e })
@@ -99,6 +99,19 @@ fn main() {
 	runtime.system.inc_account_nonce("alice".to_string());
 	let _res = runtime.balances.transfer("alice".to_string(), "charlie".to_string(), 20).map_err(|e| eprintln!("{e}"));
 	
+	let block_1 = types::Block {
+    header: support::Header { block_number: 1 },
+    extrinsics: vec![
+        support::Extrinsic {
+            caller: "alice".to_string(),
+            call: RuntimeCall::BalancesTransfer { to: "bob".to_string(), amount: 30 },
+        },
+    ],
+	};
+
+	runtime.execute_block(block_1).expect("invalid block");
+
+
 	println!("{runtime:#?}");
 }
 
