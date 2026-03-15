@@ -3,7 +3,6 @@ mod support;
 mod system;
 
 use crate::support::Dispatch;
-use types::{AccountId, Balance, BlockNumber, Nonce};
 
 mod types {
 	pub type AccountId = String;
@@ -20,23 +19,19 @@ pub enum RuntimeCall {
 }
 
 #[derive(Debug)]
-struct RuntimeConfig;
-
-impl system::Config for RuntimeConfig {
-	type AccountId = AccountId;
-	type BlockNumber = BlockNumber;
-	type Nonce = Nonce;
-}
-
-impl balances::Config for RuntimeConfig {
-	type Balance = Balance;
-}
-
-
-#[derive(Debug)]
 pub struct Runtime {
 	system: system::Pallet<RuntimeConfig>,
 	balances: balances::Pallet<RuntimeConfig>,
+}
+
+impl system::Config for Runtime {
+	type AccountId = types::AccountId;
+	type BlockNumber = types::BlockNumber;
+	type Nonce = types::Nonce;
+}
+
+impl balances::Config for Runtime {
+	type Balance = types::Balance;
 }
 
 impl Runtime {
@@ -53,13 +48,12 @@ impl Runtime {
 			return Err("Block number mismatch.");
 		}
 
-		let block_number = block.header.block_number;
 		for (i, support::Extrinsic { caller, call }) in block.extrinsics.into_iter().enumerate() {
 			self.system.inc_account_nonce(caller.clone());
 			let _res = self.dispatch(caller, call).map_err(|e| {
 				eprintln!(
 					"Extrinsic Error\n\tBlock Number: {}\n\tExtrinsic Number: {}\n\tError: {}",
-					block_number, i, e
+					block.header.block_number, i, e
 				)
 			});
 		}
@@ -69,7 +63,7 @@ impl Runtime {
 }
 
 impl crate::support::Dispatch for Runtime {
-	type Caller = AccountId;
+	type Caller = <Runtime as system::Config>::AccountId;
 	type Call = RuntimeCall;
 	// Dispatch a call on behalf of a caller. Increments the caller's nonce.
 	//
