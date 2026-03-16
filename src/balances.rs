@@ -17,7 +17,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn set_balance(&mut self, who: T::AccountId, amount: T::Balance) {
-		self.balances.insert(who, amount);
+		self.balances.insert(who.clone(), amount);
 	}
 
 	pub fn balance(&self, who: &T::AccountId) -> T::Balance {
@@ -30,19 +30,13 @@ impl<T: Config> Pallet<T> {
 		to: T::AccountId,
 		amount: T::Balance,
 	) -> crate::support::DispatchResult {
-		let from_balance = self.balance(&caller);
-		let new_from_balance = from_balance
-	    	.checked_sub(&amount)
-    	.ok_or("Not enough funds.")?;
-
-		// Update the balance of the caller
-		self.set_balance(caller, new_from_balance);
-
-		// Update the balance of the recipient
+		let caller_balance = self.balance(&caller);
 		let to_balance = self.balance(&to);
-		let new_to_balance = to_balance
-		.checked_add(&amount)
-		.ok_or("Balance overflow.")?;
+
+		let new_caller_balance = caller_balance.checked_sub(&amount).ok_or("Not enough funds.")?;
+		let new_to_balance = to_balance.checked_add(&amount).ok_or("Overflow")?;
+
+		self.set_balance(caller, new_caller_balance);
 		self.set_balance(to, new_to_balance);
 
 		Ok(())
