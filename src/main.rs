@@ -128,13 +128,13 @@ fn main() {
 			support::Extrinsic {
 				caller: alice.clone(),
 				call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::create_claim {
-					claim: "Hello, world2!".to_string(),
+					claim: "Hello, world!".to_string(),
 				}),
 			},
 			support::Extrinsic {
 				caller: bob.clone(),
 				call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::create_claim {
-					claim: "Hello, world3!".to_string(),
+					claim: "Hello, world2!".to_string(),
 				}),
 			},
 		],
@@ -152,7 +152,7 @@ fn main() {
 			support::Extrinsic {
 				caller: bob,
 				call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::create_claim {
-					claim: "Hello, world!".to_string(),
+					claim: "Hello, world3!".to_string(),
 				}),
 			},
 		],
