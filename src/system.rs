@@ -1,5 +1,5 @@
 use core::ops::AddAssign;
-use num::traits::{CheckedAdd, Zero};
+use num::traits::{One, Zero};
 use std::collections::BTreeMap;
 
 type AccountId = String;
@@ -8,8 +8,8 @@ type Nonce = u32;
 
 pub trait Config {
     type AccountId: Ord + Clone;
-    type BlockNumber: Zero + CheckedAdd + From<u8> + Copy;
-    type Nonce: Zero + CheckedAdd + From<u8> + Copy;
+    type BlockNumber: Zero + One + AddAssign + Copy;
+	type Nonce: One + AddAssign + Default;
 }
 
 #[derive(Debug)]
@@ -39,17 +39,6 @@ impl<T: Config> Pallet<T> {
     pub fn inc_nonce(&mut self, who: &T::AccountId) {
 		*self.nonce.entry(who.clone()).or_default() += T::Nonce::one();
 	}
-
-    pub fn account_nonce(&self, account: &T::AccountId) -> T::Nonce {
-        *self.nonce.get(account).unwrap_or(&T::Nonce::zero())
-    }
-
-    pub fn inc_account_nonce(&mut self, account: T::AccountId) {
-        let nonce = self.nonce.entry(account).or_insert(T::Nonce::zero());
-        *nonce = nonce
-            .checked_add(&T::Nonce::from(1u8))
-            .expect("Nonce overflow");
-    }
 }
 
 #[cfg(test)]
@@ -63,9 +52,9 @@ mod test {
 
 	#[test]
 	fn init_system() {
-        let mut system = Pallet::<TestConfig>::new();
+		let mut system = super::Pallet::<TestConfig>::new();
 		system.inc_block_number();
-		system.inc_account_nonce("alice".to_string());
+		system.inc_nonce(&"alice".to_string());
 
 		assert_eq!(system.block_number(), 1);
 		assert_eq!(system.nonce.get("alice"), Some(&1));

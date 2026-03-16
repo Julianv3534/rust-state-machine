@@ -58,7 +58,7 @@ impl Runtime {
 		}
 
 		for (i, support::Extrinsic { caller, call }) in block.extrinsics.into_iter().enumerate() {
-			self.system.inc_account_nonce(caller.clone());
+			self.system.inc_nonce(&caller);
 			let _res = self.dispatch(caller, call).map_err(|e| {
 				eprintln!(
 					"Extrinsic Error\n\tBlock Number: {}\n\tExtrinsic Number: {}\n\tError: {}",
@@ -110,10 +110,13 @@ fn main() {
 		extrinsics: vec![
 			support::Extrinsic {
 				caller: alice.clone(),
-				call: RuntimeCall::Balances(balances::Call::Transfer { to: bob, amount: 30 }),
+					call: RuntimeCall::Balances(balances::Call::Transfer {
+						to: bob.clone(),
+						amount: 30,
+					}),
 			},
 			support::Extrinsic {
-				caller: alice,
+					caller: alice.clone(),
 				call: RuntimeCall::Balances(balances::Call::Transfer { to: charlie, amount: 20 }),
 			},
 		],
@@ -125,13 +128,13 @@ fn main() {
 			support::Extrinsic {
 				caller: alice.clone(),
 				call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim {
-					claim: "Hello, world!".to_string(),
+					claim: "Hello, world2!".to_string(),
 				}),
 			},
 			support::Extrinsic {
 				caller: bob.clone(),
 				call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim {
-					claim: "Hello, world!".to_string(),
+					claim: "Hello, world3!".to_string(),
 				}),
 			},
 		],
