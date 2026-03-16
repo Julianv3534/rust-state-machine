@@ -7,7 +7,6 @@ pub trait Config: crate::system::Config {
 
 #[derive(Debug)]
 pub struct Pallet<T: Config> {
-	//Why BTreeMap and not HashMap?
 	balances: BTreeMap<T::AccountId, T::Balance>,
 }
 
