@@ -1,6 +1,7 @@
 mod balances;
 mod support;
 mod system;
+mod proof_of_existence;
 
 use crate::support::Dispatch;
 
