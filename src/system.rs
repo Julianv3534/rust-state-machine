@@ -1,5 +1,6 @@
+use core::ops::AddAssign;
+use num::traits::{One, Zero};
 use std::collections::BTreeMap;
-use num::traits::{CheckedAdd, Zero};
 
 type AccountId = String;
 type BlockNumber = u32;
@@ -7,8 +8,8 @@ type Nonce = u32;
 
 pub trait Config {
     type AccountId: Ord + Clone;
-    type BlockNumber: Zero + CheckedAdd + From<u8> + Copy;
-    type Nonce: Zero + CheckedAdd + From<u8> + Copy;
+    type BlockNumber: Zero + One + AddAssign + Copy;
+	type Nonce: One + AddAssign + Default;
 }
 
 #[derive(Debug)]
@@ -32,41 +33,28 @@ impl<T: Config> Pallet<T> {
     //it would take over 800 years for an overflow to occur.
 
     pub fn inc_block_number(&mut self) {
-        self.block_number = self
-            .block_number
-            .checked_add(&T::BlockNumber::from(1u8))
-            .expect("Block number overflow");
-    }
+		self.block_number += T::BlockNumber::one();
+	}
 
-    pub fn account_nonce(&self, account: &T::AccountId) -> T::Nonce {
-        *self.nonce.get(account).unwrap_or(&T::Nonce::zero())
-    }
-
-    pub fn inc_account_nonce(&mut self, account: T::AccountId) {
-        let nonce = self.nonce.entry(account).or_insert(T::Nonce::zero());
-        *nonce = nonce
-            .checked_add(&T::Nonce::from(1u8))
-            .expect("Nonce overflow");
-    }
+    pub fn inc_nonce(&mut self, who: &T::AccountId) {
+		*self.nonce.entry(who.clone()).or_default() += T::Nonce::one();
+	}
 }
 
 #[cfg(test)]
 mod test {
-    use super::{Config, Pallet};
-
     struct TestConfig;
-
-    impl Config for TestConfig {
-        type AccountId = String;
-        type BlockNumber = u32;
-        type Nonce = u32;
-    }
+	impl super::Config for TestConfig {
+		type AccountId = String;
+		type BlockNumber = u32;
+		type Nonce = u32;
+	}
 
 	#[test]
 	fn init_system() {
-        let mut system = Pallet::<TestConfig>::new();
+		let mut system = super::Pallet::<TestConfig>::new();
 		system.inc_block_number();
-		system.inc_account_nonce("alice".to_string());
+		system.inc_nonce(&"alice".to_string());
 
 		assert_eq!(system.block_number(), 1);
 		assert_eq!(system.nonce.get("alice"), Some(&1));
