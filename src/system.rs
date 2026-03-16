@@ -1,5 +1,6 @@
-use std::collections::BTreeMap;
+use core::ops::AddAssign;
 use num::traits::{CheckedAdd, Zero};
+use std::collections::BTreeMap;
 
 type AccountId = String;
 type BlockNumber = u32;
@@ -32,11 +33,12 @@ impl<T: Config> Pallet<T> {
     //it would take over 800 years for an overflow to occur.
 
     pub fn inc_block_number(&mut self) {
-        self.block_number = self
-            .block_number
-            .checked_add(&T::BlockNumber::from(1u8))
-            .expect("Block number overflow");
-    }
+		self.block_number += T::BlockNumber::one();
+	}
+
+    pub fn inc_nonce(&mut self, who: &T::AccountId) {
+		*self.nonce.entry(who.clone()).or_default() += T::Nonce::one();
+	}
 
     pub fn account_nonce(&self, account: &T::AccountId) -> T::Nonce {
         *self.nonce.get(account).unwrap_or(&T::Nonce::zero())
@@ -52,15 +54,12 @@ impl<T: Config> Pallet<T> {
 
 #[cfg(test)]
 mod test {
-    use super::{Config, Pallet};
-
     struct TestConfig;
-
-    impl Config for TestConfig {
-        type AccountId = String;
-        type BlockNumber = u32;
-        type Nonce = u32;
-    }
+	impl super::Config for TestConfig {
+		type AccountId = String;
+		type BlockNumber = u32;
+		type Nonce = u32;
+	}
 
 	#[test]
 	fn init_system() {
