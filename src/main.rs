@@ -77,8 +77,8 @@ impl crate::support::Dispatch for Runtime {
 	) -> support::DispatchResult {
 
 		match runtime_call {
-    	RuntimeCall::BalancesTransfer { to, amount } => {
-        self.balances.transfer(caller, to, amount).map_err(|e| { eprintln!("{e}");e })
+    		RuntimeCall::BalancesTransfer { to, amount } => {
+        		self.balances.transfer(caller, to, amount).map_err(|e| { eprintln!("{e}");e })
     		}
 		}
 	}
@@ -105,8 +105,12 @@ fn main() {
         support::Extrinsic {
             caller: "alice".to_string(),
             call: RuntimeCall::BalancesTransfer { to: "bob".to_string(), amount: 30 },
-        },
-    ],
+        	},
+			support::Extrinsic {
+				caller: "alice".to_string(),
+				call: RuntimeCall::BalancesTransfer { to: "charlie".to_string(), amount: 20 },
+			},
+    	],
 	};
 
 	runtime.execute_block(block_1).expect("invalid block");
