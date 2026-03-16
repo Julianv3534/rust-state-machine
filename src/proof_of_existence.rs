@@ -20,4 +20,60 @@ impl<T: Config> Pallet<T> {
 	pub fn new() -> Self {
 		Self { claims: BTreeMap::new() }
 	}
+
+	/// Get the owner (if any) of a claim.
+	pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
+		self.claims.get(claim)
+	}
+
+	/// Create a new claim on behalf of the `caller`.
+	/// This function will return an error if someone already has claimed that content.
+	pub fn create_claim(&mut self, caller: T::AccountId, claim: T::Content) -> crate::support::DispatchResult {
+        if self.claims.contains_key(&claim) {
+			return Err("this content is already claimed");
+		}
+        self.claims.insert(claim, caller);
+		Ok(())
+	}
+
+	/// Revoke an existing claim on some content.
+	/// This function should only succeed if the caller is the owner of an existing claim.
+	/// It will return an error if the claim does not exist, or if the caller is not the owner.
+	pub fn revoke_claim(&mut self, caller: T::AccountId, claim: T::Content) -> crate::support::DispatchResult {
+        let owner = self.claims.get(&claim).ok_or("Claim does not exist.")?;
+        if *owner != caller {
+			return Err("Caller is not the owner of the claim.");
+		}
+        self.claims.remove(&claim);
+		Ok(())
+	}
+}
+
+#[cfg(test)]
+mod test {
+	struct TestConfig;
+
+	impl super::Config for TestConfig {
+		type Content = String;
+	}
+
+	impl crate::system::Config for TestConfig {
+		type AccountId = String;
+		type BlockNumber = u32;
+		type Nonce = u32;
+	}
+
+	#[test]
+	fn basic_proof_of_existence() {
+		let mut poe = super::Pallet::<TestConfig>::new();
+		assert_eq!(poe.get_claim(&"Hello, world!".to_string()), None);
+		assert_eq!(poe.create_claim("alice".to_string(), "Hello, world!".to_string()), Ok(()));
+		assert_eq!(poe.get_claim(&"Hello, world!".to_string()), Some(&"alice".to_string()));
+		assert_eq!(
+			poe.create_claim("bob".to_string(), "Hello, world!".to_string()),
+			Err("this content is already claimed")
+		);
+		assert_eq!(poe.revoke_claim("alice".to_string(), "Hello, world!".to_string()), Ok(()));
+		assert_eq!(poe.create_claim("bob".to_string(), "Hello, world!".to_string()), Ok(()));
+	}
 }

@@ -64,7 +64,7 @@ impl<T: Config> crate::support::Dispatch for Pallet<T> {
 	) -> crate::support::DispatchResult {
 		match call {
 			Call::Transfer { to, amount } => self.transfer(caller, to, amount),
-		}
+		};
 		Ok(())
 	}
 }
